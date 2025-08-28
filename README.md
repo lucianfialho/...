@@ -13,7 +13,7 @@ curl -fsSL https://raw.githubusercontent.com/lucianfialho/.../main/install.sh | 
 ### Manual Installation 
 
 ```bash
-git clone https://github.com/yourusername/autoskipp.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/autoskipp
+git clone https://github.com/lucianfialho/....git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/autoskipp
 echo 'plugins+=(autoskipp)' >> ~/.zshrc
 source ~/.zshrc
 ```
