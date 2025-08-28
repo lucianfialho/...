@@ -1,6 +1,6 @@
-# AutoSkipp - Oh My Zsh Plugin
+# ... (AutoSkipp) - Oh My Zsh Plugin
 
-Automatic countdown and skip functionality for Claude Code interactions.
+Automatic countdown and skip functionality for Claude Code interactions using `...` command (reticências = skipping part of the story).
 
 ## Installation
 
@@ -62,17 +62,18 @@ source ~/.zshrc
 
 ```bash
 # Basic usage
-autoskipp
+...
 
-# Custom countdown
-autoskipp 7
+# Custom countdown with flags
+... --skiptime 7
+... -t 10 -m "Loading"
 
 # Only run if Claude Code is active
-autoskipp_auto
+... --auto
 
 # Quick shortcuts
-skip      # 3 seconds
-quick     # 1 second
+skip      # Same as ... -t 3
+ask       # Same as ...
 ```
 
 ## How It Works
