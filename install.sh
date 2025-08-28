@@ -1,74 +1,100 @@
 #!/bin/bash
 
-# AutoSkipp Installation Script
-# Usage: curl -fsSL https://raw.githubusercontent.com/yourusername/autoskipp/main/install.sh | bash
+# dotdotdot Installation Script
+# Usage: curl -fsSL https://raw.githubusercontent.com/lucianfialho/.../main/install.sh | bash
 
 set -e
 
-PLUGIN_NAME="autoskipp"
+BINARY_NAME="dotdotdot"
 REPO_URL="https://github.com/lucianfialho/..."
+INSTALL_DIR="/usr/local/bin"
 
-echo "🚀 Installing AutoSkipp plugin..."
+echo "🚀 Installing dotdotdot..."
 
-# Check if Oh My Zsh is installed
-if [ ! -d "$HOME/.oh-my-zsh" ]; then
-    echo "❌ Oh My Zsh not found. Please install it first:"
-    echo "   sh -c \"\$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)\""
-    exit 1
-fi
-
-# Set custom plugins directory
-ZSH_CUSTOM=${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}
-PLUGIN_DIR="$ZSH_CUSTOM/plugins/$PLUGIN_NAME"
-
-# Remove existing installation
-if [ -d "$PLUGIN_DIR" ]; then
-    echo "🔄 Removing existing installation..."
-    rm -rf "$PLUGIN_DIR"
-fi
-
-# Clone repository
-echo "📥 Downloading AutoSkipp..."
-git clone "$REPO_URL.git" "$PLUGIN_DIR" || {
-    echo "❌ Failed to clone repository. Check your internet connection."
-    exit 1
-}
-
-# Check if plugin is already in .zshrc
-ZSHRC="$HOME/.zshrc"
-if ! grep -q "plugins=.*$PLUGIN_NAME" "$ZSHRC"; then
-    echo "⚙️  Adding AutoSkipp to plugins list..."
-    
-    # Backup .zshrc
-    cp "$ZSHRC" "$ZSHRC.backup.$(date +%Y%m%d_%H%M%S)"
-    
-    # Add plugin to plugins array
-    if grep -q "plugins=(" "$ZSHRC"; then
-        # Replace existing plugins line
-        sed -i.tmp "s/plugins=(\(.*\))/plugins=(\1 $PLUGIN_NAME)/" "$ZSHRC"
-        rm "$ZSHRC.tmp" 2>/dev/null || true
-    else
-        # Add plugins line if it doesn't exist
-        echo "plugins=($PLUGIN_NAME)" >> "$ZSHRC"
-    fi
-    
-    echo "✅ Added '$PLUGIN_NAME' to your .zshrc plugins"
+# Check if running as root for system-wide install
+if [[ $EUID -eq 0 ]]; then
+    INSTALL_DIR="/usr/local/bin"
+elif [[ -w "/usr/local/bin" ]]; then
+    INSTALL_DIR="/usr/local/bin"
 else
-    echo "✅ Plugin already configured in .zshrc"
+    # Fallback to user local bin
+    INSTALL_DIR="$HOME/.local/bin"
+    mkdir -p "$INSTALL_DIR"
+    
+    # Add to PATH if not already there
+    if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
+        echo "📝 Adding $INSTALL_DIR to PATH..."
+        
+        # Detect shell and add to appropriate config
+        if [[ "$SHELL" == *"zsh"* ]]; then
+            echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
+            SHELL_CONFIG="~/.zshrc"
+        elif [[ "$SHELL" == *"bash"* ]]; then
+            echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+            SHELL_CONFIG="~/.bashrc"
+        else
+            echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.profile
+            SHELL_CONFIG="~/.profile"
+        fi
+        
+        echo "   Added PATH export to $SHELL_CONFIG"
+    fi
 fi
 
+# Download dotdotdot binary
+echo "📥 Downloading dotdotdot..."
+TEMP_FILE="/tmp/dotdotdot"
+
+if command -v curl &> /dev/null; then
+    curl -fsSL "$REPO_URL/raw/main/dotdotdot" -o "$TEMP_FILE"
+elif command -v wget &> /dev/null; then
+    wget -q "$REPO_URL/raw/main/dotdotdot" -O "$TEMP_FILE"
+else
+    echo "❌ Neither curl nor wget found. Please install one of them."
+    exit 1
+fi
+
+# Make executable and move to install directory
+chmod +x "$TEMP_FILE"
+
+# Install the binary
+if [[ -w "$INSTALL_DIR" ]]; then
+    mv "$TEMP_FILE" "$INSTALL_DIR/$BINARY_NAME"
+else
+    echo "🔐 Installing to $INSTALL_DIR requires sudo permission..."
+    sudo mv "$TEMP_FILE" "$INSTALL_DIR/$BINARY_NAME"
+fi
+
+echo "✅ dotdotdot installed to $INSTALL_DIR/$BINARY_NAME"
+
+# Create alias suggestions
 echo ""
-echo "🎉 AutoSkipp installed successfully!"
+echo "🎉 dotdotdot installed successfully!"
 echo ""
-echo "📋 Next steps:"
-echo "   1. Reload your shell: source ~/.zshrc"
-echo "   2. Try it out: ..."
+echo "📋 Quick start:"
+echo "   dotdotdot                    # 5 second countdown"
+echo "   dotdotdot --skiptime 10      # Custom time"
+echo "   dotdotdot --help             # Show all options"
+echo ""
+echo "💡 Pro tip - Add this alias to your shell config:"
+
+if [[ "$SHELL" == *"zsh"* ]]; then
+    SHELL_CONFIG="~/.zshrc"
+elif [[ "$SHELL" == *"bash"* ]]; then
+    SHELL_CONFIG="~/.bashrc"  
+else
+    SHELL_CONFIG="~/.profile"
+fi
+
+echo "   echo 'alias ...=dotdotdot' >> $SHELL_CONFIG"
+echo "   source $SHELL_CONFIG"
+echo ""
+echo "   Then use: ... --skiptime 5"
 echo ""
 echo "🚀 Available commands:"
-echo "   • ...            - Main command with CLI flags"
-echo "   • ... --skiptime 5  - Custom countdown time"
-echo "   • ... --auto     - Only runs if Claude Code detected"
-echo "   • skip           - Quick 3-second shortcut" 
-echo "   • ask            - Same as ... (5 seconds)"
+echo "   • dotdotdot --skiptime 5     # Custom countdown time"
+echo "   • dotdotdot --message \"Hi\"   # Custom message"
+echo "   • dotdotdot --auto           # Only runs if Claude Code detected"
+echo "   • dotdotdot --help           # Show help"
 echo ""
 echo "📖 For more info: https://github.com/lucianfialho/..."
